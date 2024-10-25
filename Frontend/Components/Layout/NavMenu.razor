@@ -1,0 +1,40 @@
+﻿@using Frontend.Models
+@using Frontend.Services
+@inject IAPIService API
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <img style="height:2.5em"src="./images/shinra_logo.png" />
+        <a class="navbar-brand" href="">ShinraNet</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="bi home_icon" aria-hidden="true"></span> &nbsp;Home
+            </NavLink>
+        </div>
+        @if (API.CurrentUser != null && API.CurrentUser.IsAdmin)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" style="font-size:1.1rem" href="/cpanel" Match="NavLinkMatch.All">
+                    <span class="bi home_icon" aria-hidden="true"></span> &nbsp;Admin Panel
+                </NavLink>
+            </div>
+        }
+    </nav>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync() {
+        API.OnUserChanged += StateHasChanged;
+    }
+
+    public void Dispose() {
+        API.OnUserChanged -= StateHasChanged;
+    }
+}

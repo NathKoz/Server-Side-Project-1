@@ -1,0 +1,49 @@
+﻿@page "/login"
+@using Frontend.Models
+@using Frontend.Services
+@inject NavigationManager Nav
+@inject IAPIService API
+
+<div class="mb-3">
+    <label for="username" class="form-label">Enter a username to log in:</label>
+    <input id="username" class="form-control bg-dark text-light" @bind="Username" @onkeydown="HandleKeyPress" />
+</div>
+
+<button class="btn btn-dark" @onclick="LoginClicked"><img src="/images/menu_cursor.png" /> Login</button>
+
+@if (ShowError) {
+    <div class="text-danger mt-2">
+        Login failed. Please check your username and try again.
+    </div>
+}
+
+@code {
+    private string Username { get; set; }
+    private bool ShowError { get; set; } = false;
+
+    private async Task LoginClicked() {
+        try {
+            List<User> potentialUsers = await API.GetUsersAsync(Username);
+
+            if(potentialUsers.Count == 1) {
+                API.CurrentUser = potentialUsers[0];
+                ShowError = false;
+                Nav.NavigateTo("/");
+            }
+            else {
+                ShowError = true;
+            }
+        }
+        catch (HttpRequestException ex) {
+            ShowError = true;
+        }
+    }
+
+    private async Task HandleKeyPress(KeyboardEventArgs e) {
+        if(e.Key == "Enter") {
+            //wait for updated value
+            await Task.Delay(5);
+            await LoginClicked();
+        }
+    }
+}

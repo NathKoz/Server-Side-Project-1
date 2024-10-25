@@ -1,0 +1,36 @@
+﻿@page "/new-post"
+@using Frontend.Models
+@using Frontend.Services
+@inject NavigationManager Nav
+@inject IAPIService API
+
+<form @onsubmit="HandleValidSubmit">
+    <div class="mb-3">
+        <label for="username" class="form-label">Post Title:</label>
+        <input id="username" type="text" class="form-control bg-dark text-light" @bind="post.Title" />
+    </div>
+    <div class="mb-3">
+        <label for="body" class="form-label">Body:</label>
+        <textarea id="body" class="form-control bg-dark text-light" rows="5" @bind="post.PostText"></textarea>
+    </div>
+    <button type="submit" class="btn btn-dark"><img src="/images/menu_cursor.png" /> Create</button>
+</form>
+
+@code {
+    private Post post = new Post();
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            post.UserId = API.CurrentUser.Id;
+            post.Likes = 0;
+            await API.CreatePostAsync(post);
+            Nav.NavigateTo("/");
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.Error.WriteLine($"Error creating post: {ex.Message}");
+        }
+    }
+}

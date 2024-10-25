@@ -1,0 +1,67 @@
+﻿@page "/create-account"
+@using Frontend.Models
+@using Frontend.Services
+@inject NavigationManager Nav
+@inject IAPIService API
+
+<div class="mb-3">
+    <label for="username" class="form-label">Enter a username to log in:</label>
+    <input id="username" class="form-control bg-dark text-light" @bind="Username" />
+    <label for="imageUrl" class="form-label">Enter a URL for your profile image:</label>
+    <input id="imageUrl" class="form-control bg-dark text-light" @bind="ImageUrl" />
+</div>
+
+<button class="btn btn-dark" @onclick="CreateClicked"><img src="/images/menu_cursor.png" /> Create your account!</button>
+
+@if (ShowError) {
+    <div class="text-danger mt-2">
+        User creation failed. Ensure no field is missing; otherwise, your username may already be taken.
+    </div>
+}
+
+@code {
+    public string Username { get; set; }
+    public string ImageUrl { get; set; }
+    private bool ShowError { get; set; } = false;
+
+    private async Task CreateClicked() {
+        try {
+            // Check if the username is already taken
+            List<User> potentialUsers = await API.GetUsersAsync(Username);
+
+            if (potentialUsers.Count == 1) {
+                ShowError = true;
+                return;
+            }
+        }
+        catch (HttpRequestException ex) {
+            ShowError = true;
+            return;
+        }
+
+        // If either field is blank, show an error
+        if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(ImageUrl)) {
+            ShowError = true;
+            return;
+        }
+
+        try {
+            User newUser = new User() {
+                Username = Username,
+                ImageUrl = ImageUrl
+            };
+
+            await API.CreateUserAsync(newUser);
+
+            // Get the newly created user
+            List<User> createdUser = await API.GetUsersAsync(Username);
+            API.CurrentUser = createdUser[0];
+
+            ShowError = false;
+            Nav.NavigateTo("/");
+        }
+        catch (HttpRequestException ex) {
+            ShowError = true;
+        }
+    }
+}

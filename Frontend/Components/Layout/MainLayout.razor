@@ -1,0 +1,41 @@
+﻿@inherits LayoutComponentBase
+@using Frontend.Models
+@using Frontend.Services
+@inject NavigationManager Nav
+@inject IAPIService API
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            @if(API.CurrentUser == null) {
+                <span>New here? <a href="/create-account" style="margin-left: 0rem;" class="username">Create an account!</a></span>
+            }
+            else {
+                <img src="@API.CurrentUser.ImageUrl" height="50" alt="User Image" />
+
+                <span><a href="/profile/@API.CurrentUser.Id" style="margin-right:.5rem" class="username">@API.CurrentUser.Username</a> <img src="./images/buster_sword.png" width="25" /> <a style="margin-left: .5rem;" class="username" @onclick=Logout>Logout</a></span>
+            }
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    public void Logout() {
+        API.CurrentUser = null;
+        Nav.NavigateTo("/login");
+    }
+}

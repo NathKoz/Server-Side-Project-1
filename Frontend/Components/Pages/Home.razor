@@ -1,0 +1,44 @@
+﻿@page "/"
+@using Frontend.Models
+@using Frontend.Services
+@inject NavigationManager Nav
+@inject IAPIService API
+
+<div class="posts-page">
+	<button class="btn btn-dark" style="margin-bottom: 10px" @onclick="NewPost"><img src="/images/menu_cursor.png" /> Create Post</button>
+	<div class="posts-list">
+		@foreach (var post in Posts) {
+				<PostComponent @key="post.Id" Post="post" OnDelete="HandlePostDeleted" />
+		}
+	</div>
+</div>
+
+@code {
+	private List<Post> Posts { get; set; } = new List<Post>();
+
+	protected override async Task OnInitializedAsync() {
+		if (API.CurrentUser == null) {
+			//async call avoids crash during render
+			await InvokeAsync(() => Nav.NavigateTo("/login"));
+		}
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender) {
+		if(firstRender) {
+            Posts = await API.GetPostsAsync();
+            StateHasChanged();
+        }
+	}
+
+	private void HandlePostDeleted(int postId) {
+		var postToRemove = Posts.FirstOrDefault(p => p.Id == postId);
+		if (postToRemove != null) {
+			Posts.Remove(postToRemove);
+			StateHasChanged();
+		}
+	}
+
+	private void NewPost() {
+        Nav.NavigateTo("/new-post");
+    }
+}

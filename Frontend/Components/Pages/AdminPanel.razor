@@ -1,0 +1,72 @@
+﻿@page "/cpanel"
+@using Frontend.Models
+@using Frontend.Services
+@inject NavigationManager Nav
+@inject IAPIService API
+
+<table class="table table-hover table-dark">
+	<thead>
+		<tr>
+			<th scope="col">Image</th>
+			<th scope="col">ID</th>
+			<th scope="col">Username</th>
+			<th scope="col">Admin Status</th>
+			<th scope="col">Actions</th>
+		</tr>
+	</thead>
+	<tbody>
+		@foreach (var user in Users) {
+            <tr>
+                <td><img width="100" style="background: white" src="@user.ImageUrl" alt="User Image" /></td>
+                <td>@user.Id</td>
+                <td><a href="/profile/@user.Id">@user.Username</a></td>
+                <td>@(user.IsAdmin ? "Admin" : "User")</td>
+                <td>
+                    @if (API.CurrentUser.Id != user.Id) {
+                        @if (user.IsAdmin) {
+							<button class="btn btn-warning" @onclick="() => AdminToggle(user)">Remove Admin</button>
+                        } 
+						else {
+							<button class="btn btn-warning" @onclick="() => AdminToggle(user)">Make Admin</button>
+                        }
+                    }
+					 | 
+					 <button class="btn btn-danger" @onclick="() => DeleteUser(user)">Delete User</button>
+                </td>
+            </tr>
+        }
+	</tbody>
+</table>
+
+@code {
+	public List<User> Users { get; set; } = new List<User>();
+
+	// If user is not admin, redirect to home
+	protected override async Task OnInitializedAsync() {
+		if (API.CurrentUser == null || !API.CurrentUser.IsAdmin) {
+			await InvokeAsync(() => Nav.NavigateTo("/"));
+		}
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender) {
+		if(firstRender) {
+			// Get all users
+			Users = await API.GetUsersAsync();
+			await InvokeAsync(StateHasChanged);
+		}
+	}
+
+	public async void AdminToggle(User user) {
+		await API.PatchUserIsAdminAsync(user.Id, !user.IsAdmin);
+        user.IsAdmin = !user.IsAdmin;
+
+		await InvokeAsync(StateHasChanged);
+    }
+
+	public async void DeleteUser(User user) {
+        await API.DeleteUserAsync(user.Id);
+        Users.Remove(user);
+
+        await InvokeAsync(StateHasChanged);
+    }
+}

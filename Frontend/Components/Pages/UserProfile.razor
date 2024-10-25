@@ -1,0 +1,85 @@
+﻿@page "/profile/{UserID:int}"
+@using Frontend.Models
+@using Frontend.Services
+@inject IAPIService API
+
+@if (isUserNotFound) {
+	<p>User not found.</p>
+}
+else if (user == null) {
+	<p>Loading user data...</p>
+}
+else {
+	<div class="user-profile">
+		<img src="@user.ImageUrl" alt="@user.Username" />
+		<h2>@user.Username
+			@if(API.CurrentUser.Id == user.Id || API.CurrentUser.IsAdmin) {
+                <span>&nbsp;(<a href="/edit-profile/@user.Id">Edit</a>)</span>
+			}
+		</h2>
+	</div>
+
+	<div class="posts-page">
+		<h1>@user.Username's Posts</h1>
+		<div class="posts-list">
+			@if (Posts == null) {
+				<p>Loading posts...</p>
+			}
+			else if (!Posts.Any()) {
+				<p>This user hasn't made any posts yet.</p>
+			}
+			else {
+				@foreach (var post in Posts) {
+					<PostComponent Post="post" OnDelete="HandlePostDeleted" />
+				}
+			}
+		</div>
+	</div>
+}
+
+@code {
+	[Parameter]
+	public int UserID { get; set; }
+
+	private User user;
+	private List<Post> Posts;
+	private bool isUserNotFound = false;
+
+	protected override async Task OnParametersSetAsync() {
+		try {
+			// Fetch user data
+			user = await API.GetUserAsync(UserID);
+
+			if (user == null) {
+				isUserNotFound = true;
+			}
+			await InvokeAsync(StateHasChanged);
+		}
+		catch (HttpRequestException ex) {
+			Console.Error.WriteLine($"Error fetching user data: {ex.Message}");
+			isUserNotFound = true;
+			await InvokeAsync(StateHasChanged);
+		}
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender) {
+		if (!isUserNotFound && firstRender) {
+			try {
+				// Fetch user's posts
+				Posts = await API.GetPostsByUserAsync(UserID);
+				await InvokeAsync(StateHasChanged);
+			}
+			catch (HttpRequestException ex) {
+				Console.Error.WriteLine($"Error fetching user's posts: {ex.Message}");
+			}
+		}
+	}
+
+	private void HandlePostDeleted(int postId) {
+		var postToRemove = Posts.FirstOrDefault(p => p.Id == postId);
+		if (postToRemove != null) {
+			Posts.Remove(postToRemove);
+			StateHasChanged();
+		}
+	}
+}

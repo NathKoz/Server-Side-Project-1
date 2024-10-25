@@ -1,0 +1,47 @@
+﻿@page "/posts/{PostId:int}"
+@using Frontend.Models
+@using Frontend.Services
+@inject NavigationManager Nav
+@inject IAPIService API
+
+<form @onsubmit="HandleValidSubmit">
+    <div class="mb-3">
+        <label for="username" class="form-label">Post Title:</label>
+        <input id="username" type="text" class="form-control bg-dark text-light" @bind="post.Title" />
+    </div>
+    <div class="mb-3">
+        <label for="body" class="form-label">Body:</label>
+        <textarea id="body" class="form-control bg-dark text-light" rows="5" @bind="post.PostText"></textarea>
+    </div>
+    <button type="submit" class="btn btn-dark"><img src="/images/menu_cursor.png" /> Submit Changes</button>
+</form>
+
+@code {
+    [Parameter]
+    public int PostId { get; set; }
+
+    private Post post { get; set; } = new Post();
+
+    protected override async Task OnParametersSetAsync() {
+        try {
+            post = await API.GetPostAsync(PostId);
+        }
+        catch (HttpRequestException ex) {
+            Console.Error.WriteLine($"Error fetching post data: {ex.Message}");
+        }
+
+        if (post == null) {
+            Nav.NavigateTo("/");
+        }
+    }
+
+    private async Task HandleValidSubmit() {
+        try {
+            await API.UpdatePostAsync(post.Id, post);
+            Nav.NavigateTo("/");
+        }
+        catch (HttpRequestException ex) {
+            Console.Error.WriteLine($"Error updating post: {ex.Message}");
+        }
+    }
+}

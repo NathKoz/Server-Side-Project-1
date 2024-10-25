@@ -1,0 +1,68 @@
+﻿@using Frontend.Models
+@using Frontend.Services
+@inject NavigationManager Nav
+@inject IAPIService API
+
+<div class="post">
+    <h2>
+        <span>@Post.Title</span>
+        @if (API.CurrentUser.Id == Post.UserId || API.CurrentUser.IsAdmin) {
+            <span class="post-alter">
+                &emsp;<a class="a" href="/posts/@Post.Id">Edit</a> | <a class="a" @onclick="Delete">Delete</a>
+            </span>
+        }
+    </h2>
+    @if (User != null)
+    {
+        <div class="image-container">
+            <img class="post-profile-image" src="@User.ImageUrl" alt="User Image" />
+        </div>
+        <p class="username"><a href="/profile/@User.Id">@User.Username</a></p>
+    }
+    <p>@Post.PostText</p>
+    <div class="post-details">
+        <span>@Post.Likes likes</span> | <a @onclick="LikePost"><img width="30" height="30" src="./images/phoenix_down.png" /></a> | <a @onclick="RemoveLike"><img width="25" height="25" src="./images/poison.png" /></a>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public Post Post { get; set; }
+
+    [Parameter]
+    public EventCallback<int> OnDelete { get; set; }
+
+    public User User { get; set; } = null;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // Get the user associated with the post ID
+            User = await API.GetUserAsync(Post.UserId);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public void LikePost()
+    {
+        API.IncrementPostLikesAsync(Post.Id);
+
+        // Update the UI
+        Post.Likes++;
+    }
+
+    public void RemoveLike()
+    {
+        API.DecrementPostLikesAsync(Post.Id);
+
+        // Update the UI
+        Post.Likes--;
+    }
+
+    public async Task Delete() {
+        await API.DeletePostAsync(Post.Id);
+
+        await OnDelete.InvokeAsync(Post.Id);
+    }
+}

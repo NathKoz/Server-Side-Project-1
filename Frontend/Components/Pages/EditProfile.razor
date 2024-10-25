@@ -1,0 +1,70 @@
+﻿@page "/edit-profile/{UserID:int}"
+@using Frontend.Models
+@using Frontend.Services
+@inject NavigationManager Nav
+@inject IAPIService API
+
+@if (isUserNotFound)
+{
+    <p>User not found.</p>
+}
+else if (user != null)
+{
+    <form @onsubmit="HandleValidSubmit">
+		<div class="mb-3">
+			<label for="username" class="form-label">Username:</label>
+			<input id="username" type="text" class="form-control bg-dark text-light" @bind="user.Username" />
+		</div>
+		<div class="mb-3">
+			<label for="imageurl" class="form-label">Image URL:</label>
+			<input id="imageurl" type="text" class="form-control bg-dark text-light" @bind="user.ImageUrl" />
+		</div>
+		<button type="submit" class="btn btn-dark"><img src="/images/menu_cursor.png" /> Save</button>
+    </form>
+}
+
+@code {
+	[Parameter]
+	public int UserID { get; set; }
+
+	private User user;
+	private bool isUserNotFound = false;
+
+	protected override async Task OnParametersSetAsync() {
+		try {
+			// Fetch user data
+			user = await API.GetUserAsync(UserID);
+
+			if (user == null) {
+				isUserNotFound = true;
+			}
+			await InvokeAsync(StateHasChanged);
+		}
+		catch (HttpRequestException ex) {
+			Console.Error.WriteLine($"Error fetching user data: {ex.Message}");
+			isUserNotFound = true;
+			await InvokeAsync(StateHasChanged);
+		}
+
+		// If the user is not the current user or an admin, redirect to home
+		if (user == null) {
+            Nav.NavigateTo("/");
+        }
+		else if (API.CurrentUser.Id != user.Id && !API.CurrentUser.IsAdmin) {
+            Nav.NavigateTo("/");
+        }
+	}
+
+	private async Task HandleValidSubmit()
+    {
+        try
+        {
+            await API.UpdateUserAsync(user.Id, user);
+            Nav.NavigateTo($"/profile/{UserID}");
+        }
+        catch (HttpRequestException ex)
+        {
+            Console.Error.WriteLine($"Error updating user data: {ex.Message}");
+        }
+    }
+}
