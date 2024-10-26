@@ -1,9 +1,10 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Response
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from typing import List, Optional
+from fastapi.responses import JSONResponse
 
 # Database setup
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -72,14 +73,21 @@ def get_db():
 
 app = FastAPI()
 
+@app.get("/")
+def read_root():
+    return JSONResponse(content={"message": "Welcome to the API"})
+
 # User endpoints
 @app.post("/users/", response_model=UserResponse)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = User(**user.dict())
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    try:
+        db_user = User(**user.dict())
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
 @app.get("/users/", response_model=List[UserResponse])
 def get_users(name: Optional[str] = None, db: Session = Depends(get_db)):
@@ -102,36 +110,6 @@ def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     for key, value in user.dict(exclude_unset=True).items():
         setattr(db_user, key, value)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-@app.patch("/users/{user_id}", response_model=UserResponse)
-def patch_user_name(user_id: int, name: str, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.id == user_id).first()
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    db_user.name = name
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-@app.patch("/users/{user_id}/is_admin", response_model=UserResponse)
-def patch_user_admin_status(user_id: int, is_admin: bool, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.id == user_id).first()
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    db_user.is_admin = is_admin
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-@app.patch("/users/{user_id}/image_url", response_model=UserResponse)
-def patch_user_image_url(user_id: int, image_url: str, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.id == user_id).first()
-    if db_user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    db_user.image_url = image_url
     db.commit()
     db.refresh(db_user)
     return db_user
@@ -161,11 +139,6 @@ def get_posts(title: Optional[str] = None, db: Session = Depends(get_db)):
         query = query.filter(Post.title.contains(title))
     return query.all()
 
-@app.get("/posts/user/{user_id}", response_model=List[PostResponse])
-def get_posts_by_user(user_id: int, db: Session = Depends(get_db)):
-    posts = db.query(Post).filter(Post.user_id == user_id).all()
-    return posts
-
 @app.get("/posts/{post_id}", response_model=PostResponse)
 def get_post(post_id: int, db: Session = Depends(get_db)):
     post = db.query(Post).filter(Post.id == post_id).first()
@@ -184,46 +157,6 @@ def update_post(post_id: int, post: PostUpdate, db: Session = Depends(get_db)):
     db.refresh(db_post)
     return db_post
 
-@app.patch("/posts/{post_id}/title", response_model=PostResponse)
-def patch_post_title(post_id: int, title: str, db: Session = Depends(get_db)):
-    db_post = db.query(Post).filter(Post.id == post_id).first()
-    if db_post is None:
-        raise HTTPException(status_code=404, detail="Post not found")
-    db_post.title = title
-    db.commit()
-    db.refresh(db_post)
-    return db_post
-
-@app.patch("/posts/{post_id}/post_text", response_model=PostResponse)
-def patch_post_text(post_id: int, post_text: str, db: Session = Depends(get_db)):
-    db_post = db.query(Post).filter(Post.id == post_id).first()
-    if db_post is None:
-        raise HTTPException(status_code=404, detail="Post not found")
-    db_post.post_text = post_text
-    db.commit()
-    db.refresh(db_post)
-    return db_post
-
-@app.patch("/posts/{post_id}/increment_likes", response_model=PostResponse)
-def increment_post_likes(post_id: int, db: Session = Depends(get_db)):
-    db_post = db.query(Post).filter(Post.id == post_id).first()
-    if db_post is None:
-        raise HTTPException(status_code=404, detail="Post not found")
-    db_post.likes += 1
-    db.commit()
-    db.refresh(db_post)
-    return db_post
-
-@app.patch("/posts/{post_id}/decrement_likes", response_model=PostResponse)
-def decrement_post_likes(post_id: int, db: Session = Depends(get_db)):
-    db_post = db.query(Post).filter(Post.id == post_id).first()
-    if db_post is None:
-        raise HTTPException(status_code=404, detail="Post not found")
-    db_post.likes = max(0, db_post.likes - 1)  # Ensure likes don't go below 0
-    db.commit()
-    db.refresh(db_post)
-    return db_post
-
 @app.delete("/posts/{post_id}", response_model=PostResponse)
 def delete_post(post_id: int, db: Session = Depends(get_db)):
     db_post = db.query(Post).filter(Post.id == post_id).first()
@@ -232,3 +165,15 @@ def delete_post(post_id: int, db: Session = Depends(get_db)):
     db.delete(db_post)
     db.commit()
     return db_post
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return Response(status_code=204)
+
+@app.exception_handler(ValidationError)
+async def validation_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": str(exc)}
+    )
+

@@ -11,9 +11,11 @@
     <input id="imageUrl" class="form-control bg-dark text-light" @bind="ImageUrl" />
 </div>
 
-<button class="btn btn-dark" @onclick="CreateClicked"><img src="/images/menu_cursor.png" /> Create your account!</button>
+<button class="btn btn-dark" @onclick="CreateClicked"><img src="/images/menu_cursor.png" /> Create your
+    account!</button>
 
-@if (ShowError) {
+@if (ShowError)
+{
     <div class="text-danger mt-2">
         User creation failed. Ensure no field is missing; otherwise, your username may already be taken.
     </div>
@@ -24,32 +26,51 @@
     public string ImageUrl { get; set; }
     private bool ShowError { get; set; } = false;
 
-    private async Task CreateClicked() {
-        try {
+    private bool IsValidUrl(string url)
+    {
+        return Uri.TryCreate(url, UriKind.Absolute, out var uriResult)
+        && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+    }
+
+    private async Task CreateClicked()
+    {
+        if (!IsValidUrl(ImageUrl))
+        {
+            ShowError = true;
+            return;
+        }
+
+        try
+        {
             // Check if the username is already taken
             List<User> potentialUsers = await API.GetUsersAsync(Username);
 
-            if (potentialUsers.Count == 1) {
+            if (potentialUsers.Count == 1)
+            {
                 ShowError = true;
                 return;
             }
         }
-        catch (HttpRequestException ex) {
+        catch (HttpRequestException ex)
+        {
             ShowError = true;
             return;
         }
 
         // If either field is blank, show an error
-        if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(ImageUrl)) {
+        if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(ImageUrl))
+        {
             ShowError = true;
             return;
         }
 
-        try {
-            User newUser = new User() {
-                Username = Username,
-                ImageUrl = ImageUrl
-            };
+        try
+        {
+            User newUser = new User()
+                {
+                    Username = Username,
+                    ImageUrl = ImageUrl
+                };
 
             await API.CreateUserAsync(newUser);
 
@@ -60,7 +81,8 @@
             ShowError = false;
             Nav.NavigateTo("/");
         }
-        catch (HttpRequestException ex) {
+        catch (HttpRequestException ex)
+        {
             ShowError = true;
         }
     }

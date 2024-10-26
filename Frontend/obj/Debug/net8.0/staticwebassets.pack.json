@@ -1,0 +1,65 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\Nathan\\Desktop\\Coding\\School_Projects\\Frontend\\Frontend\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\Frontend.bundle.scp.css",
+      "PackagePath": "staticwebassets\\Frontend.bundle.scp.css"
+    },
+    {
+      "Id": "C:\\Users\\Nathan\\Desktop\\Coding\\School_Projects\\Frontend\\Frontend\\wwwroot\\app.css",
+      "PackagePath": "staticwebassets\\app.css"
+    },
+    {
+      "Id": "C:\\Users\\Nathan\\Desktop\\Coding\\School_Projects\\Frontend\\Frontend\\wwwroot\\bootstrap\\bootstrap.min.css",
+      "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css"
+    },
+    {
+      "Id": "C:\\Users\\Nathan\\Desktop\\Coding\\School_Projects\\Frontend\\Frontend\\wwwroot\\bootstrap\\bootstrap.min.css.map",
+      "PackagePath": "staticwebassets\\bootstrap\\bootstrap.min.css.map"
+    },
+    {
+      "Id": "C:\\Users\\Nathan\\Desktop\\Coding\\School_Projects\\Frontend\\Frontend\\wwwroot\\favicon.png",
+      "PackagePath": "staticwebassets\\favicon.png"
+    },
+    {
+      "Id": "C:\\Users\\Nathan\\Desktop\\Coding\\School_Projects\\Frontend\\Frontend\\wwwroot\\images\\buster_sword.png",
+      "PackagePath": "staticwebassets\\images\\buster_sword.png"
+    },
+    {
+      "Id": "C:\\Users\\Nathan\\Desktop\\Coding\\School_Projects\\Frontend\\Frontend\\wwwroot\\images\\menu_cursor.png",
+      "PackagePath": "staticwebassets\\images\\menu_cursor.png"
+    },
+    {
+      "Id": "C:\\Users\\Nathan\\Desktop\\Coding\\School_Projects\\Frontend\\Frontend\\wwwroot\\images\\phoenix_down.png",
+      "PackagePath": "staticwebassets\\images\\phoenix_down.png"
+    },
+    {
+      "Id": "C:\\Users\\Nathan\\Desktop\\Coding\\School_Projects\\Frontend\\Frontend\\wwwroot\\images\\poison.png",
+      "PackagePath": "staticwebassets\\images\\poison.png"
+    },
+    {
+      "Id": "C:\\Users\\Nathan\\Desktop\\Coding\\School_Projects\\Frontend\\Frontend\\wwwroot\\images\\shinra_logo.png",
+      "PackagePath": "staticwebassets\\images\\shinra_logo.png"
+    },
+    {
+      "Id": "C:\\Users\\Nathan\\Desktop\\Coding\\School_Projects\\Frontend\\Frontend\\wwwroot\\images\\shinra_logo_white.png",
+      "PackagePath": "staticwebassets\\images\\shinra_logo_white.png"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.Frontend.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.Frontend.props",
+      "PackagePath": "build\\Frontend.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.Frontend.props",
+      "PackagePath": "buildMultiTargeting\\Frontend.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.Frontend.props",
+      "PackagePath": "buildTransitive\\Frontend.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
